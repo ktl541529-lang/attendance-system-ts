@@ -7,7 +7,7 @@
 
 ## 🌐 線上 Demo
 
-👉 [點此開啟系統（建置中）]()
+👉 [點此開啟系統](https://ktl541529-lang.github.io/attendance-system-ts/)
 
 | 層級 | 服務 |
 |---|---|
