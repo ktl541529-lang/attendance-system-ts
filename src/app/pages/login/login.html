@@ -1,0 +1,32 @@
+<div class="login-container">
+  <div class="login-card">
+    <h2>出勤申請系統</h2>
+    <p class="subtitle">醫院出勤管理平台</p>
+
+    <div class="form-group">
+      <label>帳號</label>
+      <input
+        type="text"
+        [(ngModel)]="account"
+        placeholder="請輸入帳號"
+        (keyup.enter)="onLogin()"
+      />
+    </div>
+
+    <div class="form-group">
+      <label>密碼</label>
+      <input
+        type="password"
+        [(ngModel)]="password"
+        placeholder="請輸入密碼"
+        (keyup.enter)="onLogin()"
+      />
+    </div>
+
+    <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+    <button (click)="onLogin()" [disabled]="isLoading">
+      {{ isLoading ? '登入中...' : '登入' }}
+    </button>
+  </div>
+</div>

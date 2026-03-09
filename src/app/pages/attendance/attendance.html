@@ -1,0 +1,130 @@
+<div class="attendance-container">
+  <div class="header">
+    <h2>出勤申請管理</h2>
+    <div class="user-info">
+      <span>{{ currentUser?.name }}（{{ currentUser?.dept }}）</span>
+      <button class="back-btn" (click)="goBack()">返回</button>
+      <button class="logout-btn" (click)="onLogout()">登出</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- 成功訊息 -->
+    <div class="alert-success" *ngIf="submitSuccess">{{ submitSuccess }}</div>
+
+    <!-- 新增申請按鈕 -->
+    <div class="action-bar">
+      <button class="add-btn" (click)="showForm = !showForm">
+        {{ showForm ? '取消' : '+ 新增申請' }}
+      </button>
+    </div>
+
+    <!-- 新增申請表單 -->
+    <div class="form-card" *ngIf="showForm">
+      <h3>新增出勤申請</h3>
+      <form [formGroup]="applyForm" (ngSubmit)="onSubmitApply()">
+        <div class="form-row">
+          <div class="form-group">
+            <label>假別 *</label>
+            <select formControlName="type">
+              <option value="">請選擇</option>
+              <option value="特休">特休</option>
+              <option value="病假">病假</option>
+              <option value="事假">事假</option>
+              <option value="婚假">婚假</option>
+              <option value="喪假">喪假</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>開始日期 *</label>
+            <input type="date" formControlName="startDate" />
+            <span class="date-warning" *ngIf="startDateWarning">{{ startDateWarning }}</span>
+          </div>
+          <div class="form-group">
+            <label>結束日期 *</label>
+            <input type="date" formControlName="endDate" />
+            <span class="date-warning" *ngIf="endDateWarning">{{ endDateWarning }}</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full">
+            <label>原因 *</label>
+            <input type="text" formControlName="reason" placeholder="請輸入申請原因" />
+          </div>
+        </div>
+
+        <div class="form-error" *ngIf="submitError">{{ submitError }}</div>
+
+        <div class="form-actions">
+          <button type="submit" class="submit-btn" [disabled]="applyForm.invalid">送出申請</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 篩選區 -->
+    <div class="filter-bar">
+      <select [formControl]="statusControl">
+        <option value="">全部狀態</option>
+        <option value="pending">待審核</option>
+        <option value="approved">已核准</option>
+        <option value="rejected">已退回</option>
+      </select>
+
+      <select [formControl]="typeControl">
+        <option value="">全部類型</option>
+        <option value="特休">特休</option>
+        <option value="病假">病假</option>
+        <option value="事假">事假</option>
+        <option value="婚假">婚假</option>
+        <option value="喪假">喪假</option>
+      </select>
+
+      <input
+        type="text"
+        [formControl]="keywordControl"
+        placeholder="關鍵字搜尋..."
+      />
+    </div>
+
+    <!-- 載入中 -->
+    <div class="loading" *ngIf="isLoading">載入中...</div>
+
+    <!-- 列表 -->
+    <div class="table-wrapper" *ngIf="!isLoading">
+      <table>
+        <thead>
+          <tr>
+            <th>申請人</th>
+            <th>類型</th>
+            <th>開始日期</th>
+            <th>結束日期</th>
+            <th>原因</th>
+            <th>狀態</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of attendances">
+            <td>{{ item.userName || '-' }}</td>
+            <td>{{ item.type }}</td>
+            <td>{{ item.startDate }}</td>
+            <td>{{ item.endDate }}</td>
+            <td>{{ item.reason }}</td>
+            <td>
+              <span [class]="getStatusClass(item.status)">
+                {{ getStatusLabel(item.status) }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="attendances.length === 0">
+            <td colspan="6" class="empty">目前沒有資料</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

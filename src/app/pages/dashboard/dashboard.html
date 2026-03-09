@@ -1,0 +1,19 @@
+<div class="dashboard-container">
+  <div class="header">
+    <h2>出勤申請系統</h2>
+    <div class="user-info">
+      <span>{{ currentUser?.name }}（{{ currentUser?.dept }}）</span>
+      <button class="logout-btn" (click)="onLogout()">登出</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="welcome">
+      <h3>歡迎回來，{{ currentUser?.name }}！</h3>
+      <p>角色：{{ currentUser?.role === 'admin' ? '管理者' : '一般員工' }}</p>
+    </div>
+    <div class="actions">
+      <button class="action-btn" (click)="goToAttendance()">出勤申請管理</button>
+    </div>
+  </div>
+</div>
