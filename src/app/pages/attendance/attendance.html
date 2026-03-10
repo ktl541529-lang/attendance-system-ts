@@ -101,7 +101,10 @@
     </div>
 
     <!-- 載入中 -->
-    <div class="loading" *ngIf="isLoading">載入中...</div>
+    <div class="loading-overlay" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <span>載入中...</span>
+    </div>
 
     <!-- 列表 -->
     <div class="table-wrapper" *ngIf="!isLoading">
