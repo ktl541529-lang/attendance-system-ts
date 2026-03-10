@@ -35,6 +35,9 @@
               <option value="婚假">婚假</option>
               <option value="喪假">喪假</option>
             </select>
+            <span class="field-error" *ngIf="applyForm.get('type')?.invalid && applyForm.get('type')?.touched">
+              請選擇假別
+            </span>
           </div>
         </div>
 
@@ -43,11 +46,18 @@
             <label>開始日期 *</label>
             <input type="date" formControlName="startDate" />
             <span class="date-warning" *ngIf="startDateWarning">{{ startDateWarning }}</span>
+            <span class="field-error"
+              *ngIf="applyForm.get('startDate')?.invalid && applyForm.get('startDate')?.touched">
+              請選擇開始日期
+            </span>
           </div>
           <div class="form-group">
             <label>結束日期 *</label>
             <input type="date" formControlName="endDate" />
             <span class="date-warning" *ngIf="endDateWarning">{{ endDateWarning }}</span>
+            <span class="field-error" *ngIf="applyForm.get('endDate')?.invalid && applyForm.get('endDate')?.touched">
+              請選擇結束日期
+            </span>
           </div>
         </div>
 
@@ -55,13 +65,16 @@
           <div class="form-group full">
             <label>原因 *</label>
             <input type="text" formControlName="reason" placeholder="請輸入申請原因" />
+            <span class="field-error" *ngIf="applyForm.get('reason')?.invalid && applyForm.get('reason')?.touched">
+              請填寫申請原因
+            </span>
           </div>
         </div>
 
         <div class="form-error" *ngIf="submitError">{{ submitError }}</div>
 
         <div class="form-actions">
-          <button type="submit" class="submit-btn" [disabled]="applyForm.invalid">送出申請</button>
+          <button type="submit" class="submit-btn">送出申請</button>
         </div>
       </form>
     </div>
@@ -84,11 +97,7 @@
         <option value="喪假">喪假</option>
       </select>
 
-      <input
-        type="text"
-        [formControl]="keywordControl"
-        placeholder="關鍵字搜尋..."
-      />
+      <input type="text" [formControl]="keywordControl" placeholder="關鍵字搜尋..." />
     </div>
 
     <!-- 載入中 -->

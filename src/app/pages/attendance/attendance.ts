@@ -50,7 +50,7 @@ export class AttendanceComponent implements OnInit, OnDestroy {
     private attendanceService: AttendanceService,
     private holidayService: HolidayService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.currentUser = this.authService.getCurrentUser();
@@ -114,7 +114,10 @@ export class AttendanceComponent implements OnInit, OnDestroy {
   }
 
   onSubmitApply() {
-    if (this.applyForm.invalid) return;
+    if (this.applyForm.invalid) {
+      this.applyForm.markAllAsTouched();
+      return;
+    }
     const val = this.applyForm.value;
     this.attendanceService.createAttendance({
       type: val.type as AttendanceType,
