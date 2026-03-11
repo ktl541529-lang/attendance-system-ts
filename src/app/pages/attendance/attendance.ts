@@ -121,8 +121,8 @@ export class AttendanceComponent implements OnInit, OnDestroy {
     const val = this.applyForm.value;
     this.attendanceService.createAttendance({
       type: val.type as AttendanceType,
-      startDate: val.startDate!,
-      endDate: val.endDate!,
+      start_date: val.startDate!,
+      end_date: val.endDate!,
       reason: val.reason!
     }).subscribe({
       next: () => {
@@ -163,4 +163,11 @@ export class AttendanceComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '-';
+    return dateStr.split('T')[0];
+  }
+
 }
+

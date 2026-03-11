@@ -1,44 +1,47 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, catchError, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface Holiday {
   date: string;
   name: string;
-  isHoliday: boolean;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class HolidayService {
-  private apiUrl = 'https://calendarific.com/api/v2/holidays';
   private holidays: Set<string> = new Set();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-  // 串接政府開放資料 - 台灣國定假日
   fetchHolidays(year: number): Observable<Holiday[]> {
-    const url = `https://data.ntpc.gov.tw/api/datasets/308DCD75-6119-4125-8324-09C25DCA8A7F/json?size=500`;
-    return this.http.get<any[]>(url).pipe(
+    const base = environment.production ? '/attendance-system-ts' : '';
+    return this.http.get<any[]>(`${base}/holidays.json`).pipe(
       map(data => {
         const holidays: Holiday[] = data
-          .filter(item => item.isHoliday === '是')
+          .filter(item => item['Subject'] && item['Start Date']) // 過濾空白列
           .map(item => ({
-            date: item.date,
-            name: item.description || '國定假日',
-            isHoliday: true
+            date: this.formatDate(item['Start Date']),
+            name: item['Subject']
           }));
 
-        // 快取假日日期
         holidays.forEach(h => this.holidays.add(h.date));
         return holidays;
       }),
       catchError(err => {
-        console.warn('假日 API 載入失敗，使用空清單', err);
+        console.warn('假日資料載入失敗，使用空清單', err);
         return of([]);
       })
     );
+  }
+
+  // 把 "2026\/1\/1" 轉成 "2026-01-01"
+  private formatDate(raw: string): string {
+    const cleaned = raw.replace(/\\/g, '');
+    const [y, m, d] = cleaned.split('/');
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   }
 
   isHoliday(date: string): boolean {

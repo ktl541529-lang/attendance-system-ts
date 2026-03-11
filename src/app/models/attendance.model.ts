@@ -1,17 +1,18 @@
 export type AttendanceStatus = 'pending' | 'approved' | 'rejected';
-export type AttendanceType = '特休' | '病假' | '事假' | '婚假' | '喪假';
+export type AttendanceType = '特休' | '病假' | '事假' | '婚假' | '喪假' | '加班補休';
 
 export interface AttendanceRequest {
   id: number;
-  userId: number;
-  userName?: string;
+  user_id: number;
+  user_name?: string;
+  dept?: string;
   type: AttendanceType;
   status: AttendanceStatus;
-  startDate: string;
-  endDate: string;
+  start_date: string;
+  end_date: string;
   reason: string;
-  rejectReason?: string;
-  createdAt: string;
+  reject_reason?: string;
+  created_at: string;
 }
 
 export interface AttendanceQueryParams {
