@@ -1,19 +1,287 @@
-<div class="dashboard-container">
-  <div class="header">
-    <h2>出勤申請系統</h2>
-    <div class="user-info">
-      <span>{{ currentUser?.name }}（{{ currentUser?.dept }}）</span>
-      <button class="logout-btn" (click)="onLogout()">登出</button>
-    </div>
+<div class="dashboard-wrapper">
+
+  <!-- ══ Loading ══ -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="spinner"></div>
+    <span>載入中…</span>
   </div>
 
-  <div class="content">
-    <div class="welcome">
-      <h3>歡迎回來，{{ currentUser?.name }}！</h3>
-      <p>角色：{{ currentUser?.role === 'admin' ? '管理者' : '一般員工' }}</p>
+  <ng-container *ngIf="!isLoading">
+
+    <!-- ════════════════════════════════
+         頂部橫幅
+    ════════════════════════════════ -->
+    <header class="dash-header">
+      <div class="header-deco" aria-hidden="true"></div>
+      <div class="header-content">
+        <div class="greeting-block">
+          <p class="greeting-sub">歡迎回來 👋</p>
+          <h1 class="greeting-name">{{ currentUser?.name }}</h1>
+          <span class="role-badge" [class.admin]="isAdmin">
+            {{ isAdmin ? '⚙️ 管理者' : '👤 員工' }}
+          </span>
+        </div>
+        <div class="header-stats">
+          <div class="stat-pill">
+            <span class="stat-num">{{ myApprovedCount }}</span>
+            <span class="stat-lbl">已核准</span>
+          </div>
+          <div class="stat-pill pending">
+            <span class="stat-num">{{ myPendingCount }}</span>
+            <span class="stat-lbl">待審核</span>
+          </div>
+          <div class="stat-pill days">
+            <span class="stat-num">{{ myTotalDays }}</span>
+            <span class="stat-lbl">核准天數</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ════════════════════════════════
+         快捷操作列
+    ════════════════════════════════ -->
+    <div class="quick-actions" style="justify-content: flex-end;">
+      <button class="action-btn primary" (click)="goToAttendance()">
+        📝 前往申請假單
+      </button>
+      <button class="action-btn ghost" (click)="onLogout()">
+        🚪 登出
+      </button>
     </div>
-    <div class="actions">
-      <button class="action-btn" (click)="goToAttendance()">出勤申請管理</button>
-    </div>
-  </div>
+
+    <!-- ════════════════════════════════
+         管理者摘要（admin only）
+    ════════════════════════════════ -->
+    <section *ngIf="isAdmin" class="admin-summary">
+      <div class="summary-card" [class.alert]="pendingReviewCount > 0">
+        <div class="s-icon">🔔</div>
+        <div>
+          <p class="s-num">{{ pendingReviewCount }}</p>
+          <p class="s-lbl">待您審核</p>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="s-icon">📋</div>
+        <div>
+          <p class="s-num">{{ totalEmployeeRequests }}</p>
+          <p class="s-lbl">全員申請總數</p>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="s-icon">✅</div>
+        <div>
+          <p class="s-num">{{ approvalRate }}%</p>
+          <p class="s-lbl">整體核准率</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════
+         個人圖表
+    ════════════════════════════════ -->
+    <section class="charts-section">
+      <h2 class="section-title">
+        <span class="title-bar"></span>我的申請總覽
+      </h2>
+      <div class="charts-grid">
+
+        <!-- 申請狀態甜甜圈 -->
+        <div class="chart-card">
+          <h3 class="chart-title">申請狀態分佈</h3>
+          <div class="donut-wrap">
+            <svg class="donut-svg" viewBox="0 0 100 100" aria-hidden="true">
+              <circle cx="50" cy="50" r="35" fill="none" stroke="#f1f5f9" stroke-width="14"/>
+              <circle
+                *ngFor="let seg of getDonutData(myStatusData)"
+                cx="50" cy="50" r="35" fill="none"
+                [attr.stroke]="seg.color"
+                stroke-width="14"
+                [attr.stroke-dasharray]="seg.dashArray"
+                [attr.stroke-dashoffset]="seg.dashOffset"
+              />
+              <text x="50" y="46" text-anchor="middle" class="donut-center-num">{{ myAttendances.length }}</text>
+              <text x="50" y="57" text-anchor="middle" class="donut-center-lbl">總申請</text>
+            </svg>
+            <ul class="donut-legend">
+              <li *ngFor="let d of myStatusData" class="legend-item">
+                <span class="legend-dot" [style.background]="d.color"></span>
+                <span class="legend-label">{{ d.label }}</span>
+                <span class="legend-value">{{ d.value }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 假別甜甜圈 -->
+        <div class="chart-card">
+          <h3 class="chart-title">假別使用分佈</h3>
+          <div class="donut-wrap">
+            <svg class="donut-svg" viewBox="0 0 100 100" aria-hidden="true">
+              <circle cx="50" cy="50" r="35" fill="none" stroke="#f1f5f9" stroke-width="14"/>
+              <circle
+                *ngFor="let seg of getDonutData(myTypeData)"
+                cx="50" cy="50" r="35" fill="none"
+                [attr.stroke]="seg.color"
+                stroke-width="14"
+                [attr.stroke-dasharray]="seg.dashArray"
+                [attr.stroke-dashoffset]="seg.dashOffset"
+              />
+              <text x="50" y="46" text-anchor="middle" class="donut-center-num">{{ myTypeData.length }}</text>
+              <text x="50" y="57" text-anchor="middle" class="donut-center-lbl">假別種類</text>
+            </svg>
+            <ul class="donut-legend">
+              <li *ngFor="let d of myTypeData" class="legend-item">
+                <span class="legend-dot" [style.background]="d.color"></span>
+                <span class="legend-label">{{ d.label }}</span>
+                <span class="legend-value">{{ d.value }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 近 6 個月長條圖 -->
+        <div class="chart-card bar-card">
+          <h3 class="chart-title">近 6 個月申請趨勢</h3>
+          <div class="bar-chart">
+            <div *ngFor="let stat of myMonthlyData" class="bar-group">
+              <div class="bars">
+                <div class="bar approved"
+                  [style.height.%]="getBarHeight(stat.approved, myMonthlyData, 'approved')"
+                  [title]="'已核准：' + stat.approved">
+                  <span class="bar-val" *ngIf="stat.approved > 0">{{ stat.approved }}</span>
+                </div>
+                <div class="bar pending"
+                  [style.height.%]="getBarHeight(stat.pending, myMonthlyData, 'pending')"
+                  [title]="'待審核：' + stat.pending">
+                  <span class="bar-val" *ngIf="stat.pending > 0">{{ stat.pending }}</span>
+                </div>
+                <div class="bar rejected"
+                  [style.height.%]="getBarHeight(stat.rejected, myMonthlyData, 'rejected')"
+                  [title]="'已拒絕：' + stat.rejected">
+                  <span class="bar-val" *ngIf="stat.rejected > 0">{{ stat.rejected }}</span>
+                </div>
+              </div>
+              <span class="bar-month">{{ stat.month }}</span>
+            </div>
+          </div>
+          <div class="bar-legend">
+            <span><i class="dot approved"></i>核准</span>
+            <span><i class="dot pending"></i>待審</span>
+            <span><i class="dot rejected"></i>拒絕</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════
+         管理者審核圖表（admin only）
+    ════════════════════════════════ -->
+    <section *ngIf="isAdmin" class="charts-section admin-section">
+      <h2 class="section-title admin-title">
+        <span class="title-bar admin"></span>全員審核數據
+        <span class="admin-only-badge">🔒 管理者專屬</span>
+      </h2>
+      <div class="charts-grid">
+
+        <!-- 全員狀態甜甜圈 -->
+        <div class="chart-card admin-border">
+          <h3 class="chart-title">全員申請狀態</h3>
+          <div class="donut-wrap">
+            <svg class="donut-svg" viewBox="0 0 100 100" aria-hidden="true">
+              <circle cx="50" cy="50" r="35" fill="none" stroke="#f1f5f9" stroke-width="14"/>
+              <circle
+                *ngFor="let seg of getDonutData(allStatusData)"
+                cx="50" cy="50" r="35" fill="none"
+                [attr.stroke]="seg.color"
+                stroke-width="14"
+                [attr.stroke-dasharray]="seg.dashArray"
+                [attr.stroke-dashoffset]="seg.dashOffset"
+              />
+              <text x="50" y="46" text-anchor="middle" class="donut-center-num">{{ allAttendances.length }}</text>
+              <text x="50" y="57" text-anchor="middle" class="donut-center-lbl">全部申請</text>
+            </svg>
+            <ul class="donut-legend">
+              <li *ngFor="let d of allStatusData" class="legend-item">
+                <span class="legend-dot" [style.background]="d.color"></span>
+                <span class="legend-label">{{ d.label }}</span>
+                <span class="legend-value">{{ d.value }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 全員假別甜甜圈 -->
+        <div class="chart-card admin-border">
+          <h3 class="chart-title">全員假別統計</h3>
+          <div class="donut-wrap">
+            <svg class="donut-svg" viewBox="0 0 100 100" aria-hidden="true">
+              <circle cx="50" cy="50" r="35" fill="none" stroke="#f1f5f9" stroke-width="14"/>
+              <circle
+                *ngFor="let seg of getDonutData(allTypeData)"
+                cx="50" cy="50" r="35" fill="none"
+                [attr.stroke]="seg.color"
+                stroke-width="14"
+                [attr.stroke-dasharray]="seg.dashArray"
+                [attr.stroke-dashoffset]="seg.dashOffset"
+              />
+              <text x="50" y="46" text-anchor="middle" class="donut-center-num">{{ allTypeData.length }}</text>
+              <text x="50" y="57" text-anchor="middle" class="donut-center-lbl">假別種類</text>
+            </svg>
+            <ul class="donut-legend">
+              <li *ngFor="let d of allTypeData" class="legend-item">
+                <span class="legend-dot" [style.background]="d.color"></span>
+                <span class="legend-label">{{ d.label }}</span>
+                <span class="legend-value">{{ d.value }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 核准率環形圖 -->
+        <div class="chart-card admin-border rate-card">
+          <h3 class="chart-title">審核處理狀況</h3>
+          <div class="rate-wrap">
+            <svg class="rate-svg" viewBox="0 0 100 100" aria-hidden="true">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#e2e8f0" stroke-width="10"/>
+              <circle
+                cx="50" cy="50" r="40" fill="none"
+                stroke="#10b981" stroke-width="10"
+                stroke-linecap="round"
+                [attr.stroke-dasharray]="getRateArc(approvalRate)"
+                stroke-dashoffset="62.8"
+              />
+              <text x="50" y="47" text-anchor="middle" class="rate-center-num">{{ approvalRate }}%</text>
+              <text x="50" y="60" text-anchor="middle" class="rate-center-lbl">核准率</text>
+            </svg>
+            <div class="rate-stats">
+              <div class="rate-row">
+                <span class="rate-dot" style="background:#f59e0b"></span>
+                <span>待審核</span>
+                <strong>{{ pendingReviewCount }}</strong>
+              </div>
+              <div class="rate-row">
+                <span class="rate-dot" style="background:#10b981"></span>
+                <span>已核准</span>
+                <strong>{{ allStatusData[0]?.value ?? 0 }}</strong>
+              </div>
+              <div class="rate-row">
+                <span class="rate-dot" style="background:#ef4444"></span>
+                <span>已拒絕</span>
+                <strong>{{ allStatusData[2]?.value ?? 0 }}</strong>
+              </div>
+              <div class="rate-row total">
+                <span class="rate-dot" style="background:#6366f1"></span>
+                <span>全部申請</span>
+                <strong>{{ totalEmployeeRequests }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </ng-container>
 </div>
