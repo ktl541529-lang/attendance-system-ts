@@ -19,7 +19,7 @@
 
 | 層級 | 服務 |
 |------|------|
-| 前端 | GitHub Pages（Angular 17+） |
+| 前端 | Vercel（Angular 17+） |
 | 後端 | Render（Node.js）— 與 v1 共用 |
 | 資料庫 | Supabase（PostgreSQL）— 與 v1 共用 |
 
@@ -277,4 +277,4 @@ export const environment = {
 
 ---
 
-> 📌 **系列起點**：前往 [`attendance-system`](https://github.com/ktl541529-lang/attendance-system) 了解後端架構設計與業務邏輯決策。
+> 📌 **系列起點**：前往 [`attendance-system`](https://attendance-system-ts.vercel.app) 了解後端架構設計與業務邏輯決策。
